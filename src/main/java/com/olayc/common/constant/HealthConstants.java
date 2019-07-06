@@ -11,6 +11,8 @@ public class HealthConstants {
     public static final String HEALTH_URL = "/health";
 
 
+	public static final String HEARTBEAT_URL = "/heartbeat";
+
     public final static String HEALTH_OK_RESULT = "ok";
 
 }

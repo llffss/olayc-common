@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class HealthController {
-    private final static String HEALTH_OK = "ok";
 
     /**
      * K8S心跳检查
@@ -21,6 +20,11 @@ public class HealthController {
     public String health() {
         return HealthConstants.HEALTH_OK_RESULT;
     }
+
+	@GetMapping(HealthConstants.HEARTBEAT_URL)
+	public String heartbeat() {
+		return HealthConstants.HEALTH_OK_RESULT;
+	}
 
 
 }

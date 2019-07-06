@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.olasharing</groupId>
         <artifactId>ola-parent</artifactId>
-        <version>1.4.0.1.RELEASE</version>
+        <version>1.4.0.4.RELEASE</version>
     </parent>
 
     <groupId>com.olayc</groupId>
@@ -94,5 +94,22 @@
         </dependency>
 
     </dependencies>
+
+    <distributionManagement>
+
+        <repository>
+            <id>oleyc-releases</id>
+            <name>releases</name>
+            <url>https://nexus.olafuwu.com/repository/maven-oleyc/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </repository>
+
+        <snapshotRepository>
+            <id>oleyc-snapshots</id>
+            <name>snapshots</name>
+            <url>https://nexus.olafuwu.com/repository/maven-oleyc/</url>
+        </snapshotRepository>
+
+    </distributionManagement>
 
 </project>
