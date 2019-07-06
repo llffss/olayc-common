@@ -33,7 +33,7 @@ public final class OlaSentry {
 	 */
 	private static AtomicBoolean autoInitAttempted = new AtomicBoolean(false);
 
-	private static String olaDsn=DynamicPropertyFactory.getInstance().getStringProperty("ola.sentry.dsn",null).getValue();
+	private static String olaDsn=DynamicPropertyFactory.getInstance().getStringProperty("olayc.sentry.dsn",null).getValue();
 
 	/**
 	 * Hide constructor.
