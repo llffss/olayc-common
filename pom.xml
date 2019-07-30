@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.olayc</groupId>
         <artifactId>ola-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1-release</version>
     </parent>
 
     <groupId>com.olayc</groupId>
     <artifactId>olayc-common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-release</version>
     <packaging>jar</packaging>
 
     <dependencies>
