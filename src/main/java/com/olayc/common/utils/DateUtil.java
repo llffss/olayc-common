@@ -50,6 +50,10 @@ public class DateUtil {
 		return str;
 	}
 
+	public static String formatDate(long date) {
+		return formatDate(new Date(date), DEFAULT_FORMAT);
+	}
+
 	/**
 	 * 格式化现有时间
 	 *

@@ -1,6 +1,7 @@
 package com.olayc.common.digest;
 
 import com.olayc.common.annotation.DingClient;
+import com.olayc.common.utils.DateUtil;
 import com.olayc.common.utils.JsonUtils;
 import com.olayc.common.utils.UUIDUtil;
 import lombok.Data;
@@ -42,42 +43,47 @@ public class DingFallBackAspect {
     @Pointcut("execution(* *(..)) && @annotation(com.olayc.common.annotation.DingClient)")
     private void fallBackAnnotated() {
     }
-//
-//    @Value("${ding.fallback.formate: %s %s %s fallback}")
-//    private String dingtalkformate;
+
 
     /*间隔时间  默认300秒 */
-    @Value("${ding.fallback.interval:300000}")
-    private long interval;
+//    @Value("${ding.fallback.interval:300000}")
+    // 1分钟只提示一次报警
+    private long interval = 60000;
     /*上一次有效触发时间*/
-    private static long lastTime;
+    private static long lastTime = 0;
+    private static long errorIndex = 0;
 
 
-    @After("fallBackAnnotated()")
-    public void invoke(JoinPoint joinPoint) throws Throwable {
+    @After("fallBackAnnotated()&&@annotation(dingClient)")
+    public void invoke(JoinPoint joinPoint,DingClient dingClient) throws Throwable {
         try {
-            String dingClientDesc = "";
+            String dingClientDesc = dingClient.desc();
             Throwable fallbackError = AbstractFallbackFactory.getFallbackError();
+            if(fallbackError == null){
+                return;
+            }
             String errorMsg = fallbackError == null ? "" : fallbackError.getMessage();
             Object[] args = joinPoint.getArgs();
             String argJson = JsonUtils.toJsonString(args);
             String uuid = UUIDUtil.getUuid();
             String content = new StringBuffer("feign hystrix fallback error :")
-                    .append(" uuid ").append(uuid)
-                    .append(" dingClientDesc ").append(dingClientDesc)
-                    .append(" errorMsg ").append(errorMsg)
-                    .append(" argJson ").append(argJson).toString();
-            logger.error(content);
+                    .append(" ,uuid :").append(uuid)
+                    .append(" ,接口信息 :").append(dingClientDesc)
+                    .append(" ,异常信息 :").append(errorMsg)
+                    .append(" ,参数信息 :").append(argJson).toString();
+            errorIndex ++;
+            logger.error(content + ",异常序号 :" + errorIndex);
             long l = System.currentTimeMillis();
             //判断大于5分钟
             if(l-lastTime > interval){
-                lastTime=l;
                 DingModel dingmodel =new DingModel();
                 dingmodel.setMsgtype("text");
                 DingModel.Text text =new DingModel.Text();
-                text.setContent(content);
+                text.setContent("聚合平台 hystrix 熔断异常," + content + ",上次报警时间:" + DateUtil.formatDate(lastTime) + ",累计异常数:" + errorIndex);
                 dingmodel.setText(text);
                 dingAdapter.sendMessage(dingmodel);
+                lastTime=l;
+                errorIndex = 0;
             }
         }catch (Exception e){
             logger.error("record hystrix fallback inner error" + e.getMessage(),e);
