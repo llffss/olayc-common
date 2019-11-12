@@ -1,11 +1,12 @@
 package com.olayc.common.digest;
 
 import com.olayc.common.annotation.DingClient;
+import com.olayc.common.utils.JsonUtils;
+import com.olayc.common.utils.UUIDUtil;
 import lombok.Data;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +35,16 @@ import java.util.List;
 @RefreshScope
 @ConditionalOnProperty(value = "ding.fallback.enabled", havingValue = "true")
 @Component
-public class DingFallBackAspect extends BaseDigestAspect{
+public class DingFallBackAspect {
 
     private final Logger logger = LoggerFactory.getLogger(DingFallBackAspect.class);
 
-    @Pointcut("@annotation(com.olayc.common.annotation.DingClient)")
+    @Pointcut("execution(* *(..)) && @annotation(com.olayc.common.annotation.DingClient)")
     private void fallBackAnnotated() {
     }
-
-    @Value("${ding.fallback.formate: %s %s %s fallback}")
-    private String dingtalkformate;
+//
+//    @Value("${ding.fallback.formate: %s %s %s fallback}")
+//    private String dingtalkformate;
 
     /*间隔时间  默认300秒 */
     @Value("${ding.fallback.interval:300000}")
@@ -52,26 +53,37 @@ public class DingFallBackAspect extends BaseDigestAspect{
     private static long lastTime;
 
 
-    @Around("fallBackAnnotated()&&@annotation(dingClient)")
-    public Object invoke(ProceedingJoinPoint joinPoint,DingClient dingClient) throws Throwable {
-        long l = System.currentTimeMillis();
-
-        //判断大于5分钟
-        if(l-lastTime > interval){
-            lastTime=l;
-            logger.info("=====================  进入 dingding-----fallback 切面  =============");
-            String className = getInvokeClass(joinPoint).getSimpleName();
-            String methodName = getInvokeMethod(joinPoint).getName();
-            DingModel dingmodel =new DingModel();
-            dingmodel.setMsgtype(dingClient.msgtype());
-            DingModel.Text text =new DingModel.Text();
-            String content=String.format(dingtalkformate, className,methodName,dingClient.desc());
-            text.setContent(content);
-            dingmodel.setText(text);
-            dingAdapter.sendMessage(dingmodel);
+    @After("fallBackAnnotated()")
+    public void invoke(JoinPoint joinPoint) throws Throwable {
+        try {
+            String dingClientDesc = "";
+            Throwable fallbackError = AbstractFallbackFactory.getFallbackError();
+            String errorMsg = fallbackError == null ? "" : fallbackError.getMessage();
+            Object[] args = joinPoint.getArgs();
+            String argJson = JsonUtils.toJsonString(args);
+            String uuid = UUIDUtil.getUuid();
+            String content = new StringBuffer("feign hystrix fallback error :")
+                    .append(" uuid ").append(uuid)
+                    .append(" dingClientDesc ").append(dingClientDesc)
+                    .append(" errorMsg ").append(errorMsg)
+                    .append(" argJson ").append(argJson).toString();
+            logger.error(content);
+            long l = System.currentTimeMillis();
+            //判断大于5分钟
+            if(l-lastTime > interval){
+                lastTime=l;
+                DingModel dingmodel =new DingModel();
+                dingmodel.setMsgtype("text");
+                DingModel.Text text =new DingModel.Text();
+                text.setContent(content);
+                dingmodel.setText(text);
+                dingAdapter.sendMessage(dingmodel);
+            }
+        }catch (Exception e){
+            logger.error("record hystrix fallback inner error" + e.getMessage(),e);
+        }finally {
+            AbstractFallbackFactory.removeFallbackError();
         }
-
-        return joinPoint.proceed();
     }
 
     /**
@@ -79,15 +91,15 @@ public class DingFallBackAspect extends BaseDigestAspect{
      *
      * @return
      */
-    private String getCurrentUrl() {
-        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if(requestAttributes!=null){
-            HttpServletRequest request = requestAttributes.getRequest();
-            return request.getRequestURI();
-        }else{
-            return "sys initiative request   /";
-        }
-    }
+//    private String getCurrentUrl() {
+//        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+//        if(requestAttributes!=null){
+//            HttpServletRequest request = requestAttributes.getRequest();
+//            return request.getRequestURI();
+//        }else{
+//            return "sys initiative request   /";
+//        }
+//    }
 
     @Autowired
     private DingAdapter dingAdapter;
