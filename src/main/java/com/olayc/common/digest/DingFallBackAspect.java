@@ -92,20 +92,7 @@ public class DingFallBackAspect {
         }
     }
 
-    /**
-     * 获取当前请求链接
-     *
-     * @return
-     */
-//    private String getCurrentUrl() {
-//        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-//        if(requestAttributes!=null){
-//            HttpServletRequest request = requestAttributes.getRequest();
-//            return request.getRequestURI();
-//        }else{
-//            return "sys initiative request   /";
-//        }
-//    }
+
 
     @Autowired
     private DingAdapter dingAdapter;

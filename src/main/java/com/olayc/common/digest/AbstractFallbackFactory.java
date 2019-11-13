@@ -15,11 +15,11 @@ public abstract  class  AbstractFallbackFactory<T> implements FallbackFactory<T>
     private ApplicationContext applicationContext;
 
     /**
-     * 获取fallback对象
+     * 获取fallback对象，并设置异常信息
      * @param cause
      * @return
      */
-    protected T getFallBallback(Throwable cause){
+    protected T getFallback(Throwable cause){
         errorThreadLocal.set(cause);
         Class<T> tClass = (Class<T>)((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         return applicationContext.getBean(tClass);
