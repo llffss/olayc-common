@@ -62,7 +62,7 @@ public class DingFallBackAspect {
         }
         try {
             String dingClientDesc = dingClient.desc();
-            String errorMsg = fallbackError == null ? "" : fallbackError.getClass() + fallbackError.getMessage();
+            String errorMsg = fallbackError == null ? "" : fallbackError.getClass() + ":" + fallbackError.getMessage();
             Object[] args = joinPoint.getArgs();
             String argJson = JsonUtils.toJsonString(args);
             String uuid = UUIDUtil.getUuid();
