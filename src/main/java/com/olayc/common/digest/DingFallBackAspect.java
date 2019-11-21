@@ -56,13 +56,13 @@ public class DingFallBackAspect {
 
     @After("fallBackAnnotated()&&@annotation(dingClient)")
     public void invoke(JoinPoint joinPoint,DingClient dingClient) throws Throwable {
+        Throwable fallbackError = AbstractFallbackFactory.getFallbackError();
+        if(fallbackError == null){
+            return;
+        }
         try {
             String dingClientDesc = dingClient.desc();
-            Throwable fallbackError = AbstractFallbackFactory.getFallbackError();
-            if(fallbackError == null){
-                return;
-            }
-            String errorMsg = fallbackError == null ? "" : fallbackError.getMessage();
+            String errorMsg = fallbackError == null ? "" : fallbackError.getClass() + fallbackError.getMessage();
             Object[] args = joinPoint.getArgs();
             String argJson = JsonUtils.toJsonString(args);
             String uuid = UUIDUtil.getUuid();
@@ -76,14 +76,16 @@ public class DingFallBackAspect {
             long l = System.currentTimeMillis();
             //判断大于5分钟
             if(l-lastTime > interval){
+                long _lastTime = lastTime;
+                long _errorIndex = errorIndex;
+                lastTime=l;
+                errorIndex = 0;
                 DingModel dingmodel =new DingModel();
                 dingmodel.setMsgtype("text");
                 DingModel.Text text =new DingModel.Text();
-                text.setContent("聚合平台 hystrix 熔断异常," + content + ",上次报警时间:" + DateUtil.formatDate(lastTime) + ",累计异常数:" + errorIndex);
+                text.setContent("聚合平台 hystrix 熔断异常," + content + ",上次报警时间:" + DateUtil.formatDate(_lastTime) + ",累计异常数:" + _errorIndex);
                 dingmodel.setText(text);
                 dingAdapter.sendMessage(dingmodel);
-                lastTime=l;
-                errorIndex = 0;
             }
         }catch (Exception e){
             logger.error("record hystrix fallback inner error" + e.getMessage(),e);
