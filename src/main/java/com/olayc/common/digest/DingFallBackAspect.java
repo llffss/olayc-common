@@ -4,21 +4,16 @@ import com.olayc.common.annotation.DingClient;
 import com.olayc.common.utils.DateUtil;
 import com.olayc.common.utils.JsonUtils;
 import com.olayc.common.utils.UUIDUtil;
-import lombok.Data;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PostMapping;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 
 
 /**
@@ -33,6 +28,9 @@ import java.util.List;
 @Component
 public class DingFallBackAspect {
 
+    @Autowired
+    private PushMessage pushMessage;
+
     private final Logger logger = LoggerFactory.getLogger(DingFallBackAspect.class);
 
     @Pointcut("execution(* *(..)) && @annotation(com.olayc.common.annotation.DingClient)")
@@ -40,11 +38,8 @@ public class DingFallBackAspect {
     }
 
 
-    /*间隔时间  默认300秒 */
-//    @Value("${ding.fallback.interval:300000}")
-    // 1分钟只提示一次报警
     private long interval = 60000;
-    /*上一次有效触发时间*/
+    /**上一次有效触发时间*/
     private static long lastTime = 0;
     private static long errorIndex = 0;
 
@@ -75,12 +70,12 @@ public class DingFallBackAspect {
                 long _errorIndex = errorIndex;
                 lastTime=l;
                 errorIndex = 0;
-                DingModel dingmodel =new DingModel();
+                PushMessage.DingModel dingmodel =new PushMessage.DingModel();
                 dingmodel.setMsgtype("text");
-                DingModel.Text text =new DingModel.Text();
+                PushMessage.DingModel.Text text =new PushMessage.DingModel.Text();
                 text.setContent("聚合平台 hystrix 熔断异常," + content + ",上次报警时间:" + DateUtil.formatDate(_lastTime) + ",累计异常数:" + _errorIndex);
                 dingmodel.setText(text);
-                dingAdapter.sendMessage(dingmodel);
+                pushMessage.dingAdapter.sendMessage(dingmodel);
             }
         }catch (Exception e){
             logger.error("record hystrix fallback inner error" + e.getMessage(),e);
@@ -91,64 +86,4 @@ public class DingFallBackAspect {
 
 
 
-    @Autowired
-    private DingAdapter dingAdapter;
-
-    @FeignClient(value = "ding", url = "${ding.fallback.domain:https://oapi.dingtalk.com}")
-    public interface DingAdapter {
-
-        /**
-         * @Description 钉钉
-         * @author suxxin
-         * @date 2019/4/23 0023
-         * @param
-         * @return java.lang.String
-         */
-        @PostMapping("${ding.fallback.sendurl:/send}")
-        String sendMessage(DingModel dingModel);
-
-    }
-
-    @Data
-    static public class DingModel {
-
-        /*t  ext \ link \markdown  */
-        private String msgtype;
-        private Text text;
-        private At at;
-        private Link link;
-        private Markdown markdown;
-
-        @Data
-        static public class Text{
-            private String content;
-
-            public static String getStringDate() {
-                Date currentTime = new Date();
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String dateString = formatter.format(currentTime);
-                return dateString;
-            }
-
-            public void setContent(String content) {
-                this.content = getStringDate()+"  "+content;
-            }
-        }
-        @Data
-        static public class At{
-            private List mobiles;
-        }
-        @Data
-        static public class Link {
-            private String messageUrl;
-            private String picUrl;
-            private String title;
-        }
-        @Data
-        static public class Markdown {
-            private String title;
-            private String text;
-        }
-
-    }
 }
