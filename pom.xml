@@ -11,21 +11,22 @@
 
     <groupId>com.olayc</groupId>
     <artifactId>olayc-common</artifactId>
-    <version>0.0.1-nebula-SNAPSHOT</version>
+    <version>0.0.2-cowherd-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <dependencies>
 
         <dependency>
             <groupId>io.sentry</groupId>
             <artifactId>sentry</artifactId>
             <version>1.7.13</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>io.sentry</groupId>
             <artifactId>sentry-spring</artifactId>
             <version>1.7.13</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -56,6 +57,7 @@
             <artifactId>persistence-api</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
