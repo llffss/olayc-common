@@ -49,6 +49,7 @@
             <artifactId>spring-cloud-commons</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- spring boot cloud 主依赖  结束 -->
@@ -57,7 +58,6 @@
             <artifactId>persistence-api</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
-            <optional>true</optional>
         </dependency>
 
         <dependency>

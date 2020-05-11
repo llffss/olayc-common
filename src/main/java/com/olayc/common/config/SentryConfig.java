@@ -10,7 +10,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
  *@author jianbiao11
  *@date 2018/10/30 16:28
  */
-@Configuration
+//@Configuration
 public class SentryConfig {
 
 	@Bean
