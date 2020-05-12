@@ -81,6 +81,8 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-sleuth</artifactId>
+            <version>RELEASE</version>
+            <optional>true</optional>
         </dependency>
         <!-- mybatis 依赖  结束 -->
 
